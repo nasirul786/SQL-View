@@ -2,6 +2,8 @@
 
 A lightweight, purely PHP-based web application to safely view, explore, and export your structural databases. Built without bloated frameworks, utilizing a modern minimalist Google-inspired analytical UI.
 
+![SQL View](https://i.ibb.co/R4t5XxqD/image.png)
+
 ## Features
 
 - **Aesthetic Workspace**: Clean, responsive, and distraction-free UI utilizing Bootstrap 5 utility classes paired with exact Google Material typography.
