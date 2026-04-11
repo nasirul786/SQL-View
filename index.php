@@ -1,3 +1,4 @@
+<?php
 require_once 'auth.php';
 if (isset($_SESSION['db_host'])) {
     if (empty($_SESSION['db_name'])) {
