@@ -1,7 +1,10 @@
-<?php
-session_start();
+require_once 'auth.php';
 if (isset($_SESSION['db_host'])) {
-    header("Location: tables.php");
+    if (empty($_SESSION['db_name'])) {
+        header("Location: databases.php");
+    } else {
+        header("Location: tables.php");
+    }
     exit;
 }
 $error = $_SESSION['login_error'] ?? '';
