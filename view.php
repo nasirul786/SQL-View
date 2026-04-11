@@ -10,39 +10,44 @@ if (!$table || !preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
     die("Invalid table name.");
 }
 
-$stmt = $pdo->query("SHOW COLUMNS FROM `$table`");
-$columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$table_error = null;
+try {
+    $stmt = $pdo->query("SHOW COLUMNS FROM `$table`");
+    $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$search = $_GET['search'] ?? '';
-$page = max(1, (int)($_GET['page'] ?? 1));
-$limit = 50;
-$offset = ($page - 1) * $limit;
+    $search = $_GET['search'] ?? '';
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $limit = 50;
+    $offset = ($page - 1) * $limit;
 
-$params = [];
-$whereClauses = [];
+    $params = [];
+    $whereClauses = [];
 
-if ($search !== '') {
-    foreach ($columns as $col) {
-        $whereClauses[] = "`{$col['Field']}` LIKE ?";
-        $params[] = '%' . $search . '%';
+    if ($search !== '') {
+        foreach ($columns as $col) {
+            $whereClauses[] = "`{$col['Field']}` LIKE ?";
+            $params[] = '%' . $search . '%';
+        }
     }
+
+    $whereSql = '';
+    if (!empty($whereClauses)) {
+        $whereSql = "WHERE " . implode(' OR ', $whereClauses);
+    }
+
+    $countQuery = "SELECT COUNT(*) FROM `$table` $whereSql";
+    $countStmt = $pdo->prepare($countQuery);
+    $countStmt->execute($params);
+    $totalRows = $countStmt->fetchColumn();
+    $totalPages = ceil($totalRows / $limit);
+
+    $dataQuery = "SELECT * FROM `$table` $whereSql LIMIT $limit OFFSET $offset";
+    $dataStmt = $pdo->prepare($dataQuery);
+    $dataStmt->execute($params);
+    $rows = $dataStmt->fetchAll();
+} catch (PDOException $e) {
+    $table_error = $e->getMessage();
 }
-
-$whereSql = '';
-if (!empty($whereClauses)) {
-    $whereSql = "WHERE " . implode(' OR ', $whereClauses);
-}
-
-$countQuery = "SELECT COUNT(*) FROM `$table` $whereSql";
-$countStmt = $pdo->prepare($countQuery);
-$countStmt->execute($params);
-$totalRows = $countStmt->fetchColumn();
-$totalPages = ceil($totalRows / $limit);
-
-$dataQuery = "SELECT * FROM `$table` $whereSql LIMIT $limit OFFSET $offset";
-$dataStmt = $pdo->prepare($dataQuery);
-$dataStmt->execute($params);
-$rows = $dataStmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -143,6 +148,18 @@ $rows = $dataStmt->fetchAll();
 
 <main class="content">
 
+    <?php if ($table_error): ?>
+        <div class="alert alert-danger d-flex align-items-center" role="alert" style="border-radius: 8px; border: none; background-color: #fce8e6; color: #d93025; padding: 20px;">
+            <i class="bi bi-exclamation-octagon-fill me-3" style="font-size: 24px;"></i>
+            <div>
+                <h4 class="alert-heading mb-1" style="font-weight: 500;">Table Not Found</h4>
+                <p class="mb-0">The table <strong><?= htmlspecialchars($table) ?></strong> could not be loaded. Database error: <em><?= htmlspecialchars($table_error) ?></em></p>
+                <hr>
+                <a href="tables.php" class="btn btn-outline-danger btn-sm rounded-pill px-3">Return to Tables</a>
+            </div>
+        </div>
+    <?php else: ?>
+
     <div class="action-bar">
         <form class="search-box" method="GET" action="view.php">
             <input type="hidden" name="table" value="<?= htmlspecialchars($table) ?>">
@@ -227,6 +244,8 @@ $rows = $dataStmt->fetchAll();
             <a href="?table=<?= urlencode($table) ?>&search=<?= urlencode($search) ?>&page=<?= min($totalPages, $page + 1) ?>" class="<?= ($page >= $totalPages) ? 'disabled' : '' ?>"><i class="bi bi-chevron-right"></i></a>
         </div>
     </div>
+    <?php endif; ?>
+
     <?php endif; ?>
 
 </main>
