@@ -94,8 +94,27 @@ $rows = $dataStmt->fetchAll();
         .data-table th, .data-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #dadce0; }
         .data-table th { background-color: #fff; font-weight: 500; color: #5f6368; border-bottom: 2px solid #dadce0; white-space: nowrap; }
         .data-table tbody tr:hover { background-color: #f8f9fa; }
-        .data-table td { color: #202124; white-space: nowrap; max-width: 400px; overflow: hidden; border-right: 1px solid #f1f3f4; }
+        .data-table td { color: #202124; border-right: 1px solid #f1f3f4; padding: 8px 16px; vertical-align: middle; }
         .data-table td:last-child { border-right: none; }
+        
+        .cell-content {
+            display: inline-block;
+            max-width: 350px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        
+        .view-more-link {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 4px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        .view-more-link:hover { text-decoration: underline; }
         
         .null-badge { color: #5f6368; font-style: italic; background: #f1f3f4; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
         
@@ -163,12 +182,13 @@ $rows = $dataStmt->fetchAll();
                                         echo '<span class="null-badge">NULL</span>';
                                     } else {
                                         $strVal = (string)$val;
-                                        if (mb_strlen($strVal) > 60) {
-                                            $shortText = htmlspecialchars(mb_substr($strVal, 0, 60));
+                                        if (mb_strlen($strVal) > 50) {
+                                            $shortText = htmlspecialchars(mb_substr($strVal, 0, 50));
                                             $fullTextEscaped = htmlspecialchars($strVal, ENT_QUOTES, 'UTF-8');
-                                            echo $shortText . ' <a href="#" class="view-more-link" style="color: #1a73e8; text-decoration: none; font-weight: 500; margin-left: 5px;" data-fulltext="' . $fullTextEscaped . '">...more</a>';
+                                            echo '<span class="cell-content">' . $shortText . '</span>';
+                                            echo '<a href="#" class="view-more-link" data-fulltext="' . $fullTextEscaped . '">...more</a>';
                                         } else {
-                                            echo htmlspecialchars($strVal);
+                                            echo '<span class="cell-content">' . htmlspecialchars($strVal) . '</span>';
                                         }
                                     }
                                 ?>
