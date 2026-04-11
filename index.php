@@ -108,7 +108,7 @@ unset($_SESSION['login_error']);
         </div>
     <?php endif; ?>
     
-    <form action="login.php" method="POST">
+    <form action="login.php" method="POST" id="loginForm">
         <div class="row g-3 mb-3">
             <div class="col-sm-8">
                 <div class="form-floating">
@@ -125,8 +125,8 @@ unset($_SESSION['login_error']);
         </div>
         
         <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="database" name="database" placeholder="Database" required>
-            <label for="database">Database Name</label>
+            <input type="text" class="form-control" id="database" name="database" placeholder="Database">
+            <label for="database">Database Name (Optional)</label>
         </div>
         
         <div class="form-floating mb-3">
@@ -144,5 +144,60 @@ unset($_SESSION['login_error']);
         </div>
     </form>
 </div>
+
+<script>
+document.querySelectorAll('.form-control').forEach(input => {
+    input.addEventListener('input', function() {
+        const value = this.value.trim();
+        if (value.startsWith('mysql ')) {
+            parseMysqlCommand(value);
+        }
+    });
+});
+
+function parseMysqlCommand(cmd) {
+    const parts = cmd.split(/\s+/);
+    const config = {
+        host: 'localhost',
+        port: '3306',
+        user: '',
+        pass: '',
+        db: ''
+    };
+
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        if (part === '-h' || part === '--host') {
+            config.host = parts[++i];
+        } else if (part.startsWith('-h')) {
+            config.host = part.substring(2);
+        } else if (part === '-u' || part === '--user') {
+            config.user = parts[++i];
+        } else if (part.startsWith('-u')) {
+            config.user = part.substring(2);
+        } else if (part === '-p' || part === '--password') {
+            // Check if next part is not another flag
+            if (parts[i+1] && !parts[i+1].startsWith('-')) {
+                config.pass = parts[++i];
+            }
+        } else if (part.startsWith('-p')) {
+            config.pass = part.substring(2);
+        } else if (part === '-P' || part === '--port') {
+            config.port = parts[++i];
+        } else if (part.startsWith('-P')) {
+            config.port = part.substring(2);
+        } else if (!part.startsWith('-') && part !== 'mysql' && i === parts.length - 1) {
+            // Very last part often the DB name
+            config.db = part;
+        }
+    }
+
+    if (config.host) document.getElementById('host').value = config.host;
+    if (config.port) document.getElementById('port').value = config.port;
+    if (config.user) document.getElementById('username').value = config.user;
+    if (config.pass) document.getElementById('password').value = config.pass;
+    if (config.db) document.getElementById('database').value = config.db;
+}
+</script>
 </body>
 </html>

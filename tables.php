@@ -5,6 +5,11 @@ if (!$pdo) {
     exit;
 }
 
+if (empty($_SESSION['db_name'])) {
+    header("Location: databases.php");
+    exit;
+}
+
 $stmt = $pdo->query("SHOW TABLES");
 $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
